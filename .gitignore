@@ -2,3 +2,4 @@ venv/
 __pycache__/
 snaps/
 spide_ds/
+.env
