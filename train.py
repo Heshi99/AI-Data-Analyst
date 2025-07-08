@@ -15,10 +15,10 @@ from peft import get_peft_model, LoraConfig, TaskType
 
 # --- Configuration ---
 model_name = "mistralai/Mistral-7B-Instruct-v0.1"
-# IMPORTANT: Adjust this path to your dataset's location on Google Drive
-dataset_path = "/content/mistral_spider_train.jsonl"
-MAX_SEQ_LENGTH = 384 # Increased max length for potentially longer SQL/schemas
-TRAINING_SAMPLES = 1000 # Aim for more data, adjust based on resource limits and Colab limits
+
+dataset_path = "/kaggle/input/mistralspidertraindata/mistral_spider_train.jsonl"
+MAX_SEQ_LENGTH = 384 
+TRAINING_SAMPLES = 1000 
 
 # --- 1. Load Tokenizer ---
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
@@ -36,7 +36,7 @@ bnb_config = BitsAndBytesConfig(
 
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
-    quantization_config=bnb_config, # Apply quantization config
+    quantization_config=bnb_config, 
     device_map="auto", # Automatically maps model to available devices (GPU if present)
     trust_remote_code=True,
     #attn_implementation="eager" # Eager is generally safer for debugging for some environments
@@ -62,11 +62,6 @@ dataset = dataset.select(range(min(TRAINING_SAMPLES, len(dataset))))
 print(f"Training on {len(dataset)} samples")
 
 def tokenize_function(example):
-    # Construct the full prompt as given to your agent for fine-tuning
-    # Ensure example['prompt'] contains:
-    # "You are a professional data analyst. Given the table below, write an SQL query to answer the
-    # user's question.\n\nTable Schema:\n{table_description}\n\nUser Question:\n{question}\n\nReturn only the SQL query, no explanation."
-    # And example['response'] contains the SQL.
     
     # Use Mistral's instruction format: <s>[INST] Instruction [/INST] Response</s>
     full_text = f"<s>[INST] {example['prompt']} [/INST] {example['response']}</s>"
@@ -98,7 +93,7 @@ tokenized_dataset = dataset.map(
 )
 
 # Split into training and validation sets
-train_test_split = tokenized_dataset.train_test_split(test_size=0.1, seed=42) # 10% for validation
+train_test_split = tokenized_dataset.train_test_split(test_size=0.1, seed=42) 
 train_dataset = train_test_split['train']
 eval_dataset = train_test_split['test']
 
@@ -143,15 +138,14 @@ trainer = Trainer(
     train_dataset=train_dataset, # Use the split training set
     eval_dataset=eval_dataset, # Add the evaluation set
     data_collator=data_collator,
-    # processing_class=tokenizer # This argument is not standard/needed here
+
 )
 
 print("Starting training...")
 trainer.train()
 
 # --- 8. Save Model ---
-# IMPORTANT: Adjust this path to your desired save location on Google Drive
-save_path = "/content/drive/MyDrive/Colab_LLM_FineTune/mistral-finetuned-sql-model"
+save_path = "/kaggle/working/mistral-finetuned-sql-model"
 model.save_pretrained(save_path) # Save the PEFT adapters
 tokenizer.save_pretrained(save_path) # Save the tokenizer
 print(f"Training completed and model saved to {save_path}!")
