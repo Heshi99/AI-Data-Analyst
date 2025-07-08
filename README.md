@@ -56,7 +56,10 @@ Enable non-technical users to query structured databases using natural language 
 - **Query Execution**: Runs generated SQL on uploaded dataset using DuckDB
 - **Output Display**: Interactive results shown via Streamlit table
 
+---
+# Fine Tuned Model
 
+- **Trained dataset** within train.py
 
 ## 📚 Dataset: [Spider](https://yale-lily.github.io/spider)
 
